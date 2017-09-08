@@ -77,9 +77,9 @@ template <typename Device, typename T>
 struct FocalLossGrad {
   void operator()(const Device& d, typename TTypes<T, 2>::ConstMatrix input,
                   typename TTypes<T>::ConstVec labels,
+                  typename TTypes<T, 2>::ConstMatrix out_backprop,
                   float gamma,
                   float alpha,
-                  typename TTypes<T, 2>::ConstMatrix out_backprop,
                   float variance_epsilon,
                   typename TTypes<T, 2>::Matrix dx, 
                   typename TTypes<T>::Matrix scratch3
