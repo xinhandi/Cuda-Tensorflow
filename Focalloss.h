@@ -23,9 +23,10 @@ struct FocalLoss {
                   float gamma,
                   float alpha,
                   typename TTypes<T>::Matrix output,
+                  typename TTypes<T>::Matrix pro_,
+                  typename TTypes<T>::Vec _pt,
                   typename TTypes<T>::Matrix scratch1,
-                  typename TTypes<T>::Matrix scratch2,
-                  typename TTypes<T>::Vec scratch3) {
+                  typename TTypes<T>::Matrix scratch2) {
     const int batch_size = input.dimension(0);
     const int n_class = input.dimension(1);
     //const int rest_size = input.size() / depth;
