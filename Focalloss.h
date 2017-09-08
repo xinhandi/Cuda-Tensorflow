@@ -22,7 +22,6 @@ struct FocalLoss {
                   typename TTypes<T>::ConstMatrix labels,
                   float gamma,
                   float alpha,
-                  float variance_epsilon,
                   typename TTypes<T>::Matrix output,
                   typename TTypes<T>::Matrix _pt,
                   typename TTypes<T>::Matrix pro_,
