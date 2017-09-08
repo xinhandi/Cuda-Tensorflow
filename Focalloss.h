@@ -23,8 +23,6 @@ struct FocalLoss {
                   float gamma,
                   float alpha,
                   typename TTypes<T>::Matrix output,
-                  typename TTypes<T>::Matrix pro_,
-                  typename TTypes<T>::Vec _pt,
                   typename TTypes<T>::Matrix scratch1,
                   typename TTypes<T>::Matrix scratch2) {
     const int batch_size = input.dimension(0);
@@ -57,7 +55,7 @@ struct FocalLoss {
     
     //scratch2||pro_sum
     scratch2(rest_by_batch).device(d) =
-              pro_.reshape(rest_by_batch).
+              scratch1.reshape(rest_by_batch).
               reduce_sum(along_class).
               reshape(batch_by_one).
               broadcast(one_by_class);
@@ -65,11 +63,11 @@ struct FocalLoss {
     //output
     output.reshape(rest_by_batch).device(d) = 
       scratch1.div(scratch2).reshape(rest_by_batch);
-    pro_.reshape(rest_by_batch).device(d) =
-      scratch1.div(scratch2).reshape(rest_by_batch);
+    //pro_.reshape(rest_by_batch).device(d) =
+    //  scratch1.div(scratch2).reshape(rest_by_batch);
     
     //_pt
-    _pt.reshape(batch_by_one).device(d) = scratch1(:,labels.reshape(batch_by_one));
+    //_pt.reshape(batch_by_one).device(d) = scratch1(:,labels.reshape(batch_by_one));
    
   }
   
@@ -77,15 +75,18 @@ struct FocalLoss {
 
 template <typename Device, typename T>
 struct FocalLossGrad {
-  void operator()(const Device& d, typename TTypes<T, 2>::ConstMatrix pro_,
-                  typename TTypes<T, 2>::ConstVec _pt,
+  void operator()(const Device& d, typename TTypes<T, 2>::ConstMatrix input,
                   typename TTypes<T>::ConstVec labels,
                   float gamma,
                   float alpha,
                   typename TTypes<T, 2>::ConstMatrix out_backprop,
                   float variance_epsilon,
                   typename TTypes<T, 2>::Matrix dx, 
-                  typename TTypes<T>::Vec scratch3) {
+                  typename TTypes<T>::Matrix scratch3
+                  typename TTypes<T>::Matrix scratch4
+                  typename TTypes<T>::Matrix scratch5,
+                  typename TTypes<T>::Vec scratch6,
+                  typename TTypes<T>::Vec scratch7) {
     const int batch_size = pro_.dimension(0);
     const int n_class = pro_.dimension(1);
     
@@ -106,20 +107,42 @@ struct FocalLossGrad {
     batch_by_one.set(0, batch_size);
     
 #endif
-
-    // scratch3 || _pt + epsilon
-    scratch3.device(d) = (_pt.reshape(batch_by_one) + variance_epsilon).eval().reshape(batch_by_one);
+    //scratch3||pro_1
+    scratch3(rest_by_batch).device(d) = 
+              (input.reshape(rest_by_batch) - 
+               input.reshape(rest_by_batch).
+               maximum(along_class).
+               eval().
+               reshape(rest_by_batch).
+               broadcast(one_by_class)).exp();
+    
+    //scratch4||pro_sum
+    scratch4(rest_by_batch).device(d) =
+              scratch3.reshape(rest_by_batch).
+              reduce_sum(along_class).
+              reshape(batch_by_one).
+              broadcast(one_by_class);
+    
+    //scratch5||pro_
+    scratch5.reshape(rest_by_batch).device(d) =
+       scratch3.div(scratch4).reshape(rest_by_batch);
+    
+    //scratch6||_pt
+    scratch6.reshape(batch_by_one).device(d) = scratch5(:,labels.reshape(batch_by_one));
+    
+    // scratch7 || _pt + epsilon
+    scratch7.device(d) = (scratch6.reshape(batch_by_one) + variance_epsilon).eval().reshape(batch_by_one);
       
     // i!=j
-    dx.device(d) = (static_cast<T>(1.0) - scratch3).pow(gamma-static_cast<T>(1.0)).
+    dx.device(d) = (static_cast<T>(1.0) - scratch7).pow(gamma-static_cast<T>(1.0)).
                     mul(alpha).reshape(batch_by_one).broadcast(one_by_class).
-                    mul((scratch3).log().reshape(batch_by_one).broadcast(one_by_class).
-                    mul((pro_).mul(scratch3.boardcast(one_by_class)).mul(gamma*-static_cast<T>(1.0)))+
-                    pro_.mul((1-scratch3).reshape(batch_by_one).broadcast(one_by_batch))*out_backprop;    
+                    mul((scratch7).log().reshape(batch_by_one).broadcast(one_by_class).
+                    mul((scratch5).mul(scratch7.boardcast(one_by_class)).mul(gamma*-static_cast<T>(1.0)))+
+                    scratch5.mul((1-scratch7).reshape(batch_by_one).broadcast(one_by_batch))*out_backprop;    
 
     // i==j
-    dx.device(d)(:,labels.reshape(batch_by_one)) = (static_cast<T>(1.0) - scratch3).pow(gamma).reshape(batch_by_one).mul(alpha)
-                       .mul(scratch3.mul(scratch3.log()).mul(gamma)+scratch3-static_cast<T>(1.0))
+    dx.device(d)(:,labels.reshape(batch_by_one)) = (static_cast<T>(1.0) - scratch7).pow(gamma).reshape(batch_by_one).mul(alpha)
+                       .mul(scratch7.mul(scratch7.log()).mul(gamma)+scratch7-static_cast<T>(1.0))
                        .mul(static_cast<T>(1.0))*out_backprop(:,labels.reshape(batch_by_one)); 
                         
   }
