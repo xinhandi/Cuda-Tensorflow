@@ -19,7 +19,7 @@ namespace functor {
 template <typename Device, typename T>
 struct FocalLoss {
   void operator()(const Device& d, typename TTypes<T, 2>::ConstMatrix input,
-                  typename TTypes<T>::ConstMatrix labels,
+                  typename TTypes<T>::ConstVec labels,
                   float gamma,
                   float alpha,
                   typename TTypes<T>::Matrix output,
@@ -79,14 +79,13 @@ template <typename Device, typename T>
 struct FocalLossGrad {
   void operator()(const Device& d, typename TTypes<T, 2>::ConstMatrix pro_,
                   typename TTypes<T, 2>::ConstMatrix _pt,
-                  typename TTypes<T>::ConstMatrix labels,
+                  typename TTypes<T>::ConstVec labels,
                   float gamma,
                   float alpha,
                   typename TTypes<T, 2>::ConstMatrix out_backprop,
                   float variance_epsilon,
                   typename TTypes<T, 2>::Matrix dx, 
-                  typename TTypes<T>::Vec scratch3,
-                  typename TTypes<T>::Vec scratch4) {
+                  typename TTypes<T>::Vec scratch3) {
     const int batch_size = pro_.dimension(0);
     const int n_class = pro_.dimension(1);
     
