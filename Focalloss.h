@@ -115,12 +115,12 @@ struct FocalLossGrad {
                     mul(alpha).reshape(batch_by_one).broadcast(one_by_class).
                     mul((scratch3).log().reshape(batch_by_one).broadcast(one_by_class).
                     mul((pro_).mul(scratch3.boardcast(one_by_class)).mul(gamma*-1.0))+
-                    pro_.mul((1-scratch3).reshape(batch_by_one).broadcast(one_by_batch));    
+                    pro_.mul((1-scratch3).reshape(batch_by_one).broadcast(one_by_batch))*out_backprop;    
 
     // i==j
     dx.device(d)(:,labels.reshape(batch_by_one)) = (1 - scratch3).pow(gamma).reshape(batch_by_one).mul(alpha)
                        .mul(scratch3.mul(scratch3.log()).mul(gamma)+scratch3-1.0)
-                       .mul(1.0); 
+                       .mul(1.0)*out_backprop(:,labels.reshape(batch_by_one)); 
                         
   }
 
