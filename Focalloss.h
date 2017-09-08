@@ -84,7 +84,7 @@ struct FocalLossGrad {
                   float alpha,
                   typename TTypes<T, 2>::ConstMatrix out_backprop,
                   float variance_epsilon,
-                  typename TTypes<T, 2>::Tensor dx, 
+                  typename TTypes<T, 2>::Matrix dx, 
                   typename TTypes<T>::Vec scratch3,
                   typename TTypes<T>::Vec scratch4) {
     const int batch_size = pro_.dimension(0);
