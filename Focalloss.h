@@ -77,7 +77,7 @@ struct FocalLoss {
 };
 
 template <typename Device, typename T>
-struct BatchNormGrad {
+struct FocalLossGrad {
   void operator()(const Device& d, typename TTypes<T, 2>::ConstMatrix pro_,
                   typename TTypes<T, 2>::ConstMatrix _pt,
                   typename TTypes<T>::ConstMatrix labels,
