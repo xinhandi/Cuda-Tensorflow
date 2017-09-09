@@ -69,7 +69,7 @@ class FocallossOp : public OpKernel {
 template <typename Device, typename T>
 class FocallossGradOp : public OpKernel {
  public:
-  explicit BatchNormGradOp(OpKernelConstruction* context) : OpKernel(context) {
+  explicit FocallossGradOp(OpKernelConstruction* context) : OpKernel(context) {
     OP_REQUIRES_OK(context,
                    context->GetAttr("variance_epsilon", &variance_epsilon_));
     OP_REQUIRES_OK(context,
@@ -123,7 +123,7 @@ class FocallossGradOp : public OpKernel {
                                 DataTypeToEnum<T>::value,
                                 VecShape({input.dim_size(1)}), &scratch7));
 
-    functor::BatchNormGrad<Device, T>()(
+    functor::FocallossGrad<Device, T>()(
         context->eigen_device<Device>(), input.matrix<T>(), labels.vec<T>(),
         gamma, alpha, variance_epsilon_, dx->matrix<T>(), 
         scratch3.matrix<T>(), scratch4.matrix<T>(),scratch5.matrix<T>(), scratch6.vec<T>(),scratch7.vec<T>());
