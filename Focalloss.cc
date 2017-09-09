@@ -56,7 +56,7 @@ class FocallossOp : public OpKernel {
                                 DataTypeToEnum<T>::value,
                                 MatrixrShape({input.dim_size(2)}), &scratch2));
     
-    functor::BatchNorm<Device, T>()(
+    functor::Focalloss<Device, T>()(
         context->eigen_device<Device>(), input.matrix<T>(), labels.vec<T>(),
         gamma, alpha, output->matrix<T>(), scratch1.matrix<T>(), scratch2.matrix<T>());
   }
