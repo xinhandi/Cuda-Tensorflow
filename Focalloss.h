@@ -107,6 +107,7 @@ struct FocalLossGrad {
     batch_by_one.set(0, batch_size);
     
 #endif
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     //scratch3||pro_1
     scratch3(rest_by_batch).device(d) = 
               (input.reshape(rest_by_batch) - 
@@ -115,31 +116,31 @@ struct FocalLossGrad {
                eval().
                reshape(rest_by_batch).
                broadcast(one_by_class)).exp();
-    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     //scratch4||pro_sum
     scratch4(rest_by_batch).device(d) =
               scratch3.reshape(rest_by_batch).
               reduce_sum(along_class).
               reshape(batch_by_one).
               broadcast(one_by_class);
-    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     //scratch5||pro_
     scratch5.reshape(rest_by_batch).device(d) =
        scratch3.div(scratch4).reshape(rest_by_batch);
-    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     //scratch6||_pt
     scratch6.reshape(batch_by_one).device(d) = scratch5(:,labels.reshape(batch_by_one));
-    
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     // scratch7 || _pt + epsilon
     scratch7.device(d) = (scratch6.reshape(batch_by_one) + variance_epsilon).eval().reshape(batch_by_one);
-      
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
     // i!=j
     dx.device(d) = (static_cast<T>(1.0) - scratch7).pow(gamma-static_cast<T>(1.0)).
                     mul(alpha).reshape(batch_by_one).broadcast(one_by_class).
                     mul((scratch7).log().reshape(batch_by_one).broadcast(one_by_class).
                     mul((scratch5).mul(scratch7.boardcast(one_by_class)).mul(gamma*-static_cast<T>(1.0)))+
                     scratch5.mul((1-scratch7).reshape(batch_by_one).broadcast(one_by_batch))*out_backprop;    
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     // i==j
     dx.device(d)(:,labels.reshape(batch_by_one)) = (static_cast<T>(1.0) - scratch7).pow(gamma).reshape(batch_by_one).mul(alpha)
                        .mul(scratch7.mul(scratch7.log()).mul(gamma)+scratch7-static_cast<T>(1.0))
